@@ -159,16 +159,21 @@ except Exception as e:
 
 # Run database migrations
 run_migrations() {
-    if [ -d "alembic" ] && [ -f "alembic.ini" ]; then
-        print_info "Running database migrations..."
-        if uv run alembic upgrade head; then
+    if [ -f "/app/alembic.ini" ]; then
+        if [ -d "/app/alembic" ] || [ -d "/app/migrations" ]; then
+            print_info "Running database migrations..."
+
+            uv run alembic -c /app/alembic.ini upgrade head || {
+                print_error "Database migration failed"
+                exit 1
+            }
+
             print_success "Database migrations completed"
         else
-            print_error "Database migration failed"
-            exit 1
+            print_warning "Neither 'alembic' nor 'migrations' directory found, skipping migrations"
         fi
     else
-        print_warning "Alembic not configured, skipping migrations"
+        print_warning "alembic.ini not found, skipping migrations"
     fi
 }
 
