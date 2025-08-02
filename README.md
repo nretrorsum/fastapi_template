@@ -43,6 +43,11 @@ source ./.venv/bin/activate
 #Windows
 ./.venv/Scripts/activate
 ```
+- Install all needed packages defined in pyproject.toml
+```bash
+uv sync
+```
+
 ### Run app via Docker
 ```bash
 docker compose up --build
