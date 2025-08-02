@@ -62,12 +62,12 @@ check_dependencies() {
 
 # Check if API file exists
 check_api_file() {
-    if [ ! -f "src/meal/api.py" ]; then
-        print_error "API file not found at src/meal/api.py"
+    if [ ! -f "src/api.py" ]; then
+        print_error "API file not found at src/api.py"
         print_error "Please make sure the file exists at the correct location"
         exit 1
     fi
-    print_success "API file found at src/meal/api.py"
+    print_success "API file found at src/api.py"
 }
 
 # Check if virtual environment exists and sync dependencies
@@ -204,11 +204,11 @@ start_server() {
     if [ "$DEBUG" = "true" ]; then
         print_info "Starting in development mode with hot reload..."
         # Use uvicorn directly with the module path
-        exec uv run uvicorn meal.api:app --host "$APP_HOST" --port "$APP_PORT" --reload --reload-dir ../src
+        exec uv run uvicorn api:app --host "$APP_HOST" --port "$APP_PORT" --reload --reload-dir ../src
     else
         print_info "Starting in production mode..."
         # Use uvicorn for production with multiple workers
-        exec uv run uvicorn meal.api:app --host "$APP_HOST" --port "$APP_PORT" --workers 4
+        exec uv run uvicorn api:app --host "$APP_HOST" --port "$APP_PORT" --workers 4
     fi
 }
 
@@ -224,7 +224,7 @@ trap cleanup SIGTERM SIGINT
 
 # Main execution
 main() {
-    print_info "Starting Meal Management Application..."
+    print_info "Starting Application Management..."
 
     load_env
     check_dependencies

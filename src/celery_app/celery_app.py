@@ -10,10 +10,10 @@ REDIS_URL = f"redis://:{os.getenv('REDIS_PASSWORD', '@1234ABC')}@redis:6379/0"
 
 # Створюємо екземпляр Celery
 celery = Celery(
-    'meal',
+    'src',
     broker=REDIS_URL,
     backend=REDIS_URL,
-    include=['meal.tasks']  # Імпортуємо tasks
+    include=['src.user.tasks']  # Імпортуємо tasks
 )
 
 # Налаштування Celery
@@ -38,7 +38,7 @@ if os.getenv('ENVIRONMENT') == 'development':
     )
 
 # Автоматичне виявлення tasks
-celery.autodiscover_tasks(['meal'])
+celery.autodiscover_tasks(['src.user'])
 
 @celery.task(bind=True)
 def debug_task(self):
