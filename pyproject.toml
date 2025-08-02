@@ -19,6 +19,7 @@ dependencies = [
     "asyncpg>=0.30.0",
     "greenlet>=3.2.3",
     "passlib[bcrypt]>=1.7.4",
+    "pre-commit>=4.2.0",
 ]
 
 [build-system]

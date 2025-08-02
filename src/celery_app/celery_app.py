@@ -2,21 +2,17 @@ from celery import Celery
 import os
 from dotenv import load_dotenv
 
-# Завантажуємо змінні середовища
 load_dotenv()
 
-# Налаштування Redis URL - використовуємо ім'я сервісу з docker-compose
 REDIS_URL = f"redis://:{os.getenv('REDIS_PASSWORD', '@1234ABC')}@redis:6379/0"
 
-# Створюємо екземпляр Celery
 celery = Celery(
     'src',
     broker=REDIS_URL,
     backend=REDIS_URL,
-    include=['src.user.tasks']  # Імпортуємо tasks
+    include=['src.user.tasks']
 )
 
-# Налаштування Celery
 celery.conf.update(
     task_serializer='json',
     accept_content=['json'],
@@ -24,20 +20,18 @@ celery.conf.update(
     timezone='UTC',
     enable_utc=True,
     task_track_started=True,
-    task_time_limit=30 * 60,  # 30 хвилин
-    task_soft_time_limit=60,   # 1 хвилина
+    task_time_limit=30 * 60,
+    task_soft_time_limit=60,
     worker_prefetch_multiplier=1,
     worker_max_tasks_per_child=1000,
 )
 
-# Налаштування для розробки
 if os.getenv('ENVIRONMENT') == 'development':
     celery.conf.update(
-        task_always_eager=False,  # Встановіть True для синхронного виконання в розробці
+        task_always_eager=False,
         task_eager_propagates=True,
     )
 
-# Автоматичне виявлення tasks
 celery.autodiscover_tasks(['src.user'])
 
 @celery.task(bind=True)
