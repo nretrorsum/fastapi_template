@@ -1,25 +1,30 @@
 from sqlalchemy import select, func
+from passlib.context import CryptContext
 
 from src.user.models import User
 from src.database.connection import async_session
+from src.user.schemas import UserCreate
+from src.user.repository import user_repository
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-class CrudUser:
-    def __init__(self, async_session):
-        self.async_session = async_session
+class UserService:
 
-    async def create_user(self, user: User):
-        async with self.async_session() as session:
-            session.add(user)
-            await session.commit()
-            await session.refresh(user)
-            return user
+    @classmethod
+    async def create_user_service(cls, user_to_create: UserCreate):
+        user_model = User(
+            username=user_to_create.username,
+            name = user_to_create.name,
+            surname = user_to_create.surname,
+            email=user_to_create.email,
+            password_hash=pwd_context.hash(user_to_create.password),
+        )
+        print(f'User model DTO:{user_model.__dict__}')
 
-    async def get_user_by_email(self, email) -> list[User] | None:
-        async with self.async_session() as session:
-            query = select(User).where(User.email == email)
-            result = await session.execute(query)
-            users = result.scalar()
-            return users
+        created_user = await user_repository.user_crud.create_user(
+            user_model
+        )
 
-crud_user = CrudUser(async_session)
+        print(f'Created user:{created_user}')
+
+        return created_user

@@ -1,24 +1,46 @@
-from uuid import uuid4
-from datetime import datetime
-from sqlalchemy import(
-    Column, Integer, String, DateTime, ForeignKey, Boolean,
-    UUID)
-from sqlalchemy.ext.declarative import declarative_base
+from uuid import UUID, uuid4
+from sqlalchemy import String, Uuid, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from src.database.services import CoreModel
 
-Base = declarative_base()
-
-class User(Base):
-
+class User(CoreModel):
     __tablename__ = 'users'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    username = Column(String(50), unique=True, nullable=False)
-    name = Column(String(50), nullable=False)
-    surname = Column(String(50), nullable=False)
-    email = Column(String(100), unique=True, nullable=False)
-    password_hash = Column(String(128), nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow())
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow())
-    is_active = Column(Boolean, default=True)
+    username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    surname: Mapped[str] = mapped_column(String, nullable=False)
+    email: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    password_hash: Mapped[str] = mapped_column(String, nullable=False)
 
+    blacked_refresh_tokens: Mapped[list["BlackedRefreshTokens"]] = relationship(
+        "BlackedRefreshTokens",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
+    refresh_tokens: Mapped["UserRefreshTokens"] = relationship(
+        "UserRefreshTokens",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+class BlackedRefreshTokens(CoreModel):
+    __tablename__ = 'blacked_refresh_tokens'
+
+    user_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey('users.id'), nullable=False)
+    token: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="blacked_refresh_tokens")
+
+class UserRefreshTokens(CoreModel):
+
+    __tablename__ = 'refresh_tokens'
+
+    user_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey('users.id'), nullable=False)
+    token: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+
+    user: Mapped[User] = relationship(
+        "User",
+        back_populates="refresh_tokens",
+        uselist=False,
+    )
