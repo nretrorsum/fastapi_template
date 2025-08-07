@@ -18,7 +18,9 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from src.user.models import Base
+from src.database.services import Base
+from src.database.services import CoreModel
+from src.user.models import User, BlackedRefreshTokens
 
 target_metadata = Base.metadata
 
