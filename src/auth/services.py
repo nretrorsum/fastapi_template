@@ -3,9 +3,10 @@ from fastapi import HTTPException, Cookie
 from passlib.context import CryptContext
 from datetime import timedelta, datetime
 from jose import jwt, JWTError, ExpiredSignatureError
-from config import SECRET_KEY
+from config import SECRET_KEY, ACCESS_TOKEN_LIVE, REFRESH_TOKEN_LIVE
 from typing import Optional
 import logging
+from src.auth.schemas import UserLogin
 
 logger = logging.getLogger(__name__)
 
@@ -14,13 +15,13 @@ bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 class AuthService:
 
     @staticmethod
-    async def validate_user_credentials(login: str, password: str):
-        db_user = await user_repository.user_crud.get_user_by_email(login=login)
+    async def validate_user_credentials(login: str, password: str) -> bool:
+        db_user = await user_repository.user_crud.get_user_by_email(email=login)
         if not db_user:
-            raise HTTPException(status_code=401, detail='Not authenticated')
+            return False
         if not bcrypt_context.verify(password, db_user.hashed_password):
-            raise HTTPException(status_code=401, detail='Not authenticated')
-        return {'status': 'authenticated'}
+            return False
+        return True
 
     @staticmethod
     async def generate_jwt(login: str, expiration: timedelta):
@@ -60,3 +61,10 @@ class AuthService:
             return user_credentials
         except JWTError as e:
             return {'status': 'Error in token processing', 'error': e}
+
+    @staticmethod
+    async def login_user(user_creds: UserLogin) -> str | None:
+        check = await validate_user_credentials(user_creds.email, user_creds.password)
+        if not check:
+            raise HTTPException(status_code=401, detail='Not authenticated')
+        return await generate_jwt(user_creds.email, timedelta(minutes=ACCESS_TOKEN_LIVE))

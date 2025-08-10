@@ -1,8 +1,10 @@
 from fastapi import APIRouter
+from src.auth.schemas import UserLogin
 
 auth_router = APIRouter(
     tags=['auth'],
 )
 
-@auth_router.post('/login', response_model=Token)
-async def login_user():
+@auth_router.post('/login')
+async def login_user(user: UserLogin):
+    pass

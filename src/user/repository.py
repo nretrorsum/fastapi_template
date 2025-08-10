@@ -2,7 +2,7 @@ from sqlalchemy import select, func
 from logging import getLogger
 from fastapi import HTTPException
 
-from src.user.models import User,
+from src.user.models import User, UserRefreshTokens, BlackedRefreshTokens
 from src.database.connection import async_session
 
 logger = getLogger(__name__)
@@ -14,7 +14,6 @@ class CrudRepositoryUser:
     async def create_user(self, user: User) -> User:
         async with self.async_session() as session:
             try:
-                print(f'User in query:{user.__dict__}')
                 session.add(user)
                 await session.commit()
                 await session.refresh(user)
@@ -43,7 +42,13 @@ class AuthServicesRepository:
 
     async def check_refresh_token(self, refresh_token) -> str:
         async with self.async_session() as session:
-            query = select(User).where(User.refresh_token == refresh_token)
+            query = (
+                select(UserRefreshTokens)
+                .where(UserRefreshTokens.token == refresh_token))
+            result = await session.execute(query)
+            refresh_token = result.scalar()
+            return refresh_token
+
 
 
 class UserRepository:
