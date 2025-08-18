@@ -12,7 +12,6 @@ from src.database.connection import db_dependency
 from src.user.models import BlackedRefreshTokens, UserRefreshTokens
 from src.user.services import UserService
 
-
 logger = getLogger(__name__)
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -105,15 +104,11 @@ class AuthService:
 
     @staticmethod
     async def login_user(user_creds: UserLogin, session: db_dependency) -> dict | None:
-        #time_validate_user_creds = perf_counter() # start time of user validation
         user = await AuthService.validate_user_credentials(user_creds.email, user_creds.password, session=session)
 
         if not user:
             raise HTTPException(status_code=401, detail="Not authenticated")
 
-        #time_end_validate_user_creds = perf_counter() #end time of user validation
-
-        #time_start_token_generation = perf_counter() # start time of token generation
         access_token = await AuthService.generate_jwt(
             login=user_creds.email,
             expiration=timedelta(minutes=int(ACCESS_TOKEN_LIVE)),
@@ -135,9 +130,7 @@ class AuthService:
                 },
                 session=session,
             )
-        #time_end_token_generation = perf_counter() # end time of token generation
-        #print(f'Time to validate user credentials: {time_end_validate_user_creds - time_validate_user_creds} ms')
-        #print(f'Time to generate tokens: {time_end_token_generation - time_start_token_generation} ms')
+
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,

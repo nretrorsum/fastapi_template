@@ -1,9 +1,10 @@
-from sqlalchemy import select, func
 from logging import getLogger
-from fastapi import HTTPException
 
-from src.user.models import User, UserRefreshTokens, BlackedRefreshTokens
+from fastapi import HTTPException
+from sqlalchemy import select
+
 from src.database.connection import async_session
+from src.user.models import User, UserRefreshTokens
 
 logger = getLogger(__name__)
 

@@ -1,5 +1,4 @@
-from time import perf_counter
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 
 from logger import setup_logger
 from src.auth.routers import auth_router

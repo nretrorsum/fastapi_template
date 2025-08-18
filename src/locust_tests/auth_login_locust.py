@@ -1,10 +1,9 @@
 # src/locust_tests/auth_login_locust.py
 
 import random
-import string
-from locust import HttpUser, task, between
-from faker import Faker
 import uuid
+
+from locust import HttpUser, between, task
 
 #fake = Faker()
 
