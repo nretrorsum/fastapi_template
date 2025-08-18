@@ -60,3 +60,9 @@ docker compose up --build
 - **Database**: PostgreSQL on port 5432
 - **Redis**: Redis with RedisStack on port 6379
 - **Celery**: Background task worker
+
+## To use Locust:
+
+```bash
+locust -f src/locust_tests/locustfile.py --host=http://localhost:8000 -u 20 -r 5 -t 120s --headless --html=report.html
+```
