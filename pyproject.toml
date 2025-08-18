@@ -26,6 +26,7 @@ dependencies = [
     "yappi>=1.6.10",
     "line-profiler>=5.0.0",
     "faker>=37.5.3",
+    "gunicorn>=23.0.0",
 ]
 
 [build-system]
