@@ -21,6 +21,11 @@ dependencies = [
     "passlib[bcrypt]>=1.7.4",
     "pre-commit>=4.2.0",
     "python-jose>=3.5.0",
+    "locust>=2.38.1",
+    "aiofiles>=24.1.0",
+    "yappi>=1.6.10",
+    "line-profiler>=5.0.0",
+    "faker>=37.5.3",
 ]
 
 [build-system]

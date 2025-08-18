@@ -174,7 +174,7 @@ services:
     networks:
       - meal_network
     deploy:
-      replicas: 2
+      replicas: 1
 
   # Celery Beat Scheduler
   celery_beat:
