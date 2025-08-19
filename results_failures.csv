@@ -1,0 +1,4 @@
+Method,Name,Error,Occurrences
+GET,UNAUTH: GET /user/get/email/{email},"CatchResponseError('Expected 401, got 404')",51
+POST,POST /user/user_info/create/{user_id},CatchResponseError('Failed to create user info: 422'),52
+GET,UNAUTH: GET /user/get/all,"CatchResponseError('Expected 401, got 200')",97
