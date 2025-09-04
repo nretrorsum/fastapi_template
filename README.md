@@ -1,29 +1,58 @@
-# Meal Application
+# FastAPI Template
 
-A FastAPI application with PostgreSQL, Redis, and Celery integration, managed with uv.
+A FastAPI app template with PostgreSQL, Redis, and Celery integration, managed with uv,
+allowing you to create various applications faster and more efficiently.
 
 ## Development
 
-This project uses `uv` for dependency management. Make sure you have uv installed:
+### Install uv
 
+This project uses `uv` for dependency management. Make sure you have uv installed:
+- For MacOS/Linux
 ```bash
+#MacOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
-
-## Running with Docker
-
-Build and run the application:
-
+- For **Windows**
 ```bash
-docker-compose up --build
+#Windows
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/0.8.4/install.ps1 | iex"
+```
+or using pip
+```bash
+pip install uv
+```
+### Activate virtual environment and install packages
+
+- Create .env from .env.dev-example
+```bash
+cp  env.dev-example .env
 ```
 
-## Project Structure
+- Init virtual environment
 
-- `app/` - Application code
-- `scripts/` - Shell scripts for running services
-- `pyproject.toml` - Project configuration and dependencies
-- `uv.lock` - Locked dependencies
+```bash
+uv venv
+```
+
+after that activate it:
+```bash
+#MacOS/Linux
+source ./.venv/bin/activate
+
+#Windows
+./.venv/Scripts/activate
+```
+- Install all needed packages defined in pyproject.toml
+```bash
+uv sync
+```
+
+### Run app via Docker
+```bash
+docker compose up --build
+```
+
 
 ## Services
 
@@ -32,13 +61,8 @@ docker-compose up --build
 - **Redis**: Redis with RedisStack on port 6379
 - **Celery**: Background task worker
 
-## Environment Variables
+## To use Locust:
 
-Create a `.env` file with the following variables:
-
-```env
-POSTGRES_USER=your_user
-POSTGRES_PASSWORD=your_password
-POSTGRES_DB=your_db
-REDIS_PASSWORD=your_redis_password
+```bash
+locust -f src/locust_tests/locustfile.py --host=http://localhost:8000 -u 20 -r 5 -t 120s --headless --html=report.html
 ```

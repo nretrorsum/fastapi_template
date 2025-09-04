@@ -57,17 +57,29 @@ check_dependencies() {
         exit 1
     fi
 
+    # Check for production server (gunicorn) if not in debug mode
+    if [ "$DEBUG" != "true" ]; then
+        if ! uv run python -c "import gunicorn" 2>/dev/null; then
+            print_warning "gunicorn is not installed. Installing..."
+            uv add gunicorn || {
+                print_error "Failed to install gunicorn"
+                exit 1
+            }
+        fi
+        print_success "gunicorn is available"
+    fi
+
     print_success "All dependencies are available"
 }
 
 # Check if API file exists
 check_api_file() {
-    if [ ! -f "src/meal/api.py" ]; then
-        print_error "API file not found at src/meal/api.py"
+    if [ ! -f "src/api.py" ]; then
+        print_error "API file not found at src/api.py"
         print_error "Please make sure the file exists at the correct location"
         exit 1
     fi
-    print_success "API file found at src/meal/api.py"
+    print_success "API file found at src/api.py"
 }
 
 # Check if virtual environment exists and sync dependencies
@@ -159,16 +171,21 @@ except Exception as e:
 
 # Run database migrations
 run_migrations() {
-    if [ -d "alembic" ] && [ -f "alembic.ini" ]; then
-        print_info "Running database migrations..."
-        if uv run alembic upgrade head; then
+    if [ -f "/app/alembic.ini" ]; then
+        if [ -d "/app/alembic" ] || [ -d "/app/migrations" ]; then
+            print_info "Running database migrations..."
+
+            uv run alembic -c /app/alembic.ini upgrade head || {
+                print_error "Database migration failed"
+                exit 1
+            }
+
             print_success "Database migrations completed"
         else
-            print_error "Database migration failed"
-            exit 1
+            print_warning "Neither 'alembic' nor 'migrations' directory found, skipping migrations"
         fi
     else
-        print_warning "Alembic not configured, skipping migrations"
+        print_warning "alembic.ini not found, skipping migrations"
     fi
 }
 
@@ -186,6 +203,10 @@ start_server() {
     APP_HOST=${APP_HOST:-0.0.0.0}
     APP_PORT=${APP_PORT:-8000}
     DEBUG=${DEBUG:-true}
+    WORKERS=${WORKERS:-4}
+    WORKER_CLASS=${WORKER_CLASS:-uvicorn.workers.UvicornWorker}
+    TIMEOUT=${TIMEOUT:-120}
+    KEEPALIVE=${KEEPALIVE:-5}
 
     print_info "Starting FastAPI server..."
     print_info "Host: $APP_HOST"
@@ -197,13 +218,28 @@ start_server() {
     cd src
 
     if [ "$DEBUG" = "true" ]; then
-        print_info "Starting in development mode with hot reload..."
-        # Use uvicorn directly with the module path
-        exec uv run uvicorn meal.api:app --host "$APP_HOST" --port "$APP_PORT" --reload --reload-dir ../src
+        print_info "Starting in development mode with uvicorn and hot reload..."
+        # Use uvicorn directly with the module path for development
+        exec uv run uvicorn api:app --host "$APP_HOST" --port "$APP_PORT" --reload --reload-dir ../src
     else
-        print_info "Starting in production mode..."
-        # Use uvicorn for production with multiple workers
-        exec uv run uvicorn meal.api:app --host "$APP_HOST" --port "$APP_PORT" --workers 4
+        print_info "Starting in production mode with gunicorn..."
+        print_info "Workers: $WORKERS"
+        print_info "Worker class: $WORKER_CLASS"
+        print_info "Timeout: $TIMEOUT"
+        print_info "Keepalive: $KEEPALIVE"
+
+        # Use gunicorn for production with multiple workers
+        exec uv run gunicorn api:app \
+            --bind "$APP_HOST:$APP_PORT" \
+            --workers "$WORKERS" \
+            --worker-class "$WORKER_CLASS" \
+            --timeout "$TIMEOUT" \
+            --keep-alive "$KEEPALIVE" \
+            --max-requests 1000 \
+            --max-requests-jitter 100 \
+            --preload \
+            --access-logfile - \
+            --error-logfile -
     fi
 }
 
@@ -219,7 +255,7 @@ trap cleanup SIGTERM SIGINT
 
 # Main execution
 main() {
-    print_info "Starting Meal Management Application..."
+    print_info "Starting Application Management..."
 
     load_env
     check_dependencies
@@ -238,14 +274,22 @@ show_help() {
     echo "Options:"
     echo "  --help, -h          Show this help message"
     echo "  --no-migrations     Skip database migrations"
-    echo "  --production        Force production mode"
-    echo "  --development       Force development mode"
+    echo "  --production        Force production mode (uses gunicorn)"
+    echo "  --development       Force development mode (uses uvicorn)"
     echo ""
     echo "Environment Variables:"
     echo "  APP_HOST            Server host (default: 0.0.0.0)"
     echo "  APP_PORT            Server port (default: 8000)"
     echo "  DEBUG               Enable debug mode (default: true)"
     echo "  ENVIRONMENT         Environment name (development/production/docker)"
+    echo "  WORKERS             Number of gunicorn workers (default: 4)"
+    echo "  WORKER_CLASS        Gunicorn worker class (default: uvicorn.workers.UvicornWorker)"
+    echo "  TIMEOUT             Worker timeout in seconds (default: 120)"
+    echo "  KEEPALIVE           Keepalive timeout in seconds (default: 5)"
+    echo ""
+    echo "Server Selection:"
+    echo "  DEBUG=true          Uses uvicorn with hot reload (development)"
+    echo "  DEBUG=false         Uses gunicorn with multiple workers (production)"
     echo ""
 }
 
